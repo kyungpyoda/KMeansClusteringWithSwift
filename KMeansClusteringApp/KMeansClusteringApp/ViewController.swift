@@ -9,33 +9,62 @@ import UIKit
 
 class ViewController: UIViewController {
 
-    struct Vector {
+    struct Vertex {
         var lng: Double
         var lat: Double
+        var centroidIndex: Int = -1
+        func distanceTo(_ vertex: Vertex) -> Double {
+            return sqrt((lat - vertex.lat) * (lat - vertex.lat) + (lng - vertex.lng) * (lng - vertex.lng))
+        }
+        static func centroid(of vertexs: [Vertex]) -> Vertex {
+            var sumX = 0.0
+            var sumY = 0.0
+            vertexs.forEach { v in
+                sumX += v.lng
+                sumY += v.lat
+            }
+            let centerX = sumX / Double(vertexs.count)
+            let centerY = sumY / Double(vertexs.count)
+            return Vertex(lng: centerX, lat: centerY)
+        }
+        lazy var pointView: UIView = {
+            let view = UIView()
+            view.frame.origin.x = CGFloat(lng)
+            view.frame.origin.y = CGFloat(lat)
+            view.frame.size.width = 5
+            view.frame.size.height = 5
+            view.backgroundColor = .white
+            return view
+        }()
+//        mutating func moveTo(p: CGPoint) {
+//            UIView.animate(withDuration: 1, animations: {
+//                pointView.transform = CGAffineTransform(translationX: p.x - pointView.frame.origin.x, y: p.y - pointView.frame.origin.y)
+//            })
+//        }
     }
     let K_COUNT = 5
     let DATA_COUNT = 50
-    var k = [Vector]()
-    var center = [Vector]()
-    var datas = [Vector]()
+    var k: [[Vertex]] = [[]]
+    var centroids = [Vertex]()
+    var datas = [Vertex]()
     
     @IBOutlet weak var board: UIView!
     @IBOutlet weak var centerBoard: UIView!
     
-    private func makePointView(vector: Vector) -> UIView {
+    private func makePointView(vertex: Vertex) -> UIView {
         let view = UIView(frame: CGRect(
-            x: vector.lng,
-            y: vector.lat,
+            x: vertex.lng,
+            y: vertex.lat,
             width: 5,
             height: 5
         ))
         view.backgroundColor = .white
         return view
     }
-    private func makeClusterView(vector: Vector) -> UIView {
+    private func makeClusterView(vertex: Vertex) -> UIView {
         let view = UIView(frame: CGRect(
-            x: vector.lng,
-            y: vector.lat,
+            x: vertex.lng,
+            y: vertex.lat,
             width: 15,
             height: 15
         ))
@@ -47,12 +76,16 @@ class ViewController: UIViewController {
         super.viewDidLoad()
         board.layer.borderWidth = 1
         board.layer.borderColor = UIColor.black.cgColor
+        
     }
 
-    @IBAction func touchedGenerateButton(_ sender: Any) {
+    @IBAction func touchedClustering(_ sender: Any) {
+        initAndClustering()
+    }
+    func initAndClustering() {
         datas.removeAll()
         k.removeAll()
-        center.removeAll()
+        centroids.removeAll()
         board.subviews.forEach({
             $0.removeFromSuperview()
         })
@@ -60,53 +93,59 @@ class ViewController: UIViewController {
         (0..<DATA_COUNT).forEach { _ in
             let rx = Double.random(in: 0...Double(board.frame.width))
             let ry = Double.random(in: 0...Double(board.frame.height))
-            datas.append(Vector(lng: rx, lat: ry))
+            datas.append(Vertex(lng: rx, lat: ry))
         }
-        datas.forEach({
-            board.addSubview(makePointView(vector: $0))
-        })
+        for i in (0..<datas.count) {
+            board.addSubview(datas[i].pointView)
+        }
         (0..<K_COUNT).forEach { i in
-            center.append(datas[i])
+            centroids.append(datas[i])
         }
-        centerBoard.subviews.forEach {
-            $0.removeFromSuperview()
-        }
-        center.forEach({
-            centerBoard.addSubview(makeClusterView(vector: $0))
-        })
-    }
-    
-    @IBAction func touchedContinue(_ sender: Any) {
-        var temp = [[Vector]](repeating: [], count: K_COUNT)
-        datas.forEach { d in
-            var distances = [Double]()
-            for c in center {
-                let distance = (d.lat - c.lat) * (d.lat - c.lat) + (d.lng - c.lng) * (d.lng - c.lng)
-                distances.append(distance)
+        var flag = true
+        while flag {
+            flag = false
+            var temp = [[Vertex]](repeating: [], count: K_COUNT)
+            for i in (0..<datas.count) {
+                var minDistance = Double.greatestFiniteMagnitude
+                var indexOfNearest = -1
+                for (index, centroid) in centroids.enumerated() {
+                    let distance = datas[i].distanceTo(centroid)
+                    if distance < minDistance {
+                        minDistance = distance
+                        indexOfNearest = index
+                    }
+                }
+                guard indexOfNearest != nil else { continue }
+                if datas[i].centroidIndex != indexOfNearest {
+                    flag = true
+                }
+                datas[i].centroidIndex = indexOfNearest
+                
+                temp[indexOfNearest].append(datas[i])
             }
-            let minDistance = distances.min()!
-            let index = distances.firstIndex(of: minDistance)!
-            temp[index].append(d)
-        }
-        
-        center.removeAll()
-        temp.forEach({ c in
-            var sumX = 0.0
-            var sumY = 0.0
-            c.forEach({
-                sumX += $0.lng
-                sumY += $0.lat
+            
+            centroids.removeAll()
+            temp.forEach({ vertexs in
+                let centroid = Vertex.centroid(of: vertexs)
+                centroids.append(centroid)
             })
-            let averageX = sumX / Double(c.count)
-            let averageY = sumY / Double(c.count)
-            center.append(Vector(lng: averageX, lat: averageY))
-        })
+            print("calculating")
+        }
+        print("end")
         centerBoard.subviews.forEach {
             $0.removeFromSuperview()
         }
-        center.forEach({
-            centerBoard.addSubview(makeClusterView(vector: $0))
+        centroids.forEach({
+            centerBoard.addSubview(makeClusterView(vertex: $0))
         })
+        
+    }
+    @IBAction func touchedAnimate(_ sender: Any) {
+        for i in (0..<datas.count) {
+            UIView.animate(withDuration: 1, animations: {
+                self.datas[i].pointView.transform = CGAffineTransform(translationX: CGFloat(self.centroids[self.datas[i].centroidIndex].lng) - self.datas[i].pointView.frame.origin.x, y: CGFloat(self.centroids[self.datas[i].centroidIndex].lat) - self.datas[i].pointView.frame.origin.y)
+            })
+        }
     }
 }
 

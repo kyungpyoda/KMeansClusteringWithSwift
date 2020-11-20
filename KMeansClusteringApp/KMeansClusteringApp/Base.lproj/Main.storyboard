@@ -32,16 +32,16 @@
                                 <subviews>
                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="S3f-WO-9j4">
                                         <rect key="frame" x="0.0" y="0.0" width="207" height="80"/>
-                                        <state key="normal" title="GenerateRandomly"/>
+                                        <state key="normal" title="Clustering"/>
                                         <connections>
-                                            <action selector="touchedGenerateButton:" destination="BYZ-38-t0r" eventType="touchUpInside" id="pyG-8o-rnh"/>
+                                            <action selector="touchedClustering:" destination="BYZ-38-t0r" eventType="touchUpInside" id="pyG-8o-rnh"/>
                                         </connections>
                                     </button>
                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Uz5-Fk-lng">
                                         <rect key="frame" x="207" y="0.0" width="207" height="80"/>
-                                        <state key="normal" title="Continue"/>
+                                        <state key="normal" title="Animate"/>
                                         <connections>
-                                            <action selector="touchedContinue:" destination="BYZ-38-t0r" eventType="touchUpInside" id="Xva-Fc-Jna"/>
+                                            <action selector="touchedAnimate:" destination="BYZ-38-t0r" eventType="touchUpInside" id="Xva-Fc-Jna"/>
                                         </connections>
                                     </button>
                                 </subviews>
