@@ -36,11 +36,6 @@ class ViewController: UIViewController {
             view.backgroundColor = .white
             return view
         }()
-//        mutating func moveTo(p: CGPoint) {
-//            UIView.animate(withDuration: 1, animations: {
-//                pointView.transform = CGAffineTransform(translationX: p.x - pointView.frame.origin.x, y: p.y - pointView.frame.origin.y)
-//            })
-//        }
     }
     let K_COUNT = 5
     let DATA_COUNT = 50
@@ -115,7 +110,7 @@ class ViewController: UIViewController {
                         indexOfNearest = index
                     }
                 }
-                guard indexOfNearest != nil else { continue }
+                guard indexOfNearest != -1 else { continue }
                 if datas[i].centroidIndex != indexOfNearest {
                     flag = true
                 }
